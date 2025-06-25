@@ -93,6 +93,10 @@ class RPAEngine:
         except Exception as e:
             self.log_action(f"导航到 {url}", "失败", str(e))
             return False
+
+    def navigate_to(self, url: str) -> bool:
+        """导航到指定URL - navigate_to_url的别名"""
+        return self.navigate_to_url(url)
     
     def find_element_safe(self, by: By, value: str, timeout: int = 10):
         """安全查找元素"""

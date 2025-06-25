@@ -99,33 +99,46 @@ def apply_adspower_style_fixes():
             outline: none;
         }
         
-        /* 统一表格样式 */
+        /* 统一表格样式 - 增强版 */
         QTableWidget {
             background-color: #ffffff;
             border: 1px solid #d9d9d9;
             border-radius: 4px;
             gridline-color: #f0f0f0;
             font-size: 14px;
+            selection-background-color: #e6f7ff;
+            alternate-background-color: #fafafa;
         }
-        
+
         QTableWidget::item {
-            padding: 8px;
+            padding: 8px 12px;
             border-bottom: 1px solid #f0f0f0;
+            min-height: 32px;
         }
-        
+
         QTableWidget::item:selected {
             background-color: #e6f7ff;
             color: #1890ff;
         }
-        
+
+        QTableWidget::item:hover {
+            background-color: #f5f5f5;
+        }
+
         QHeaderView::section {
             background-color: #fafafa;
             color: #262626;
-            padding: 8px;
+            padding: 12px 8px;
             border: none;
             border-bottom: 1px solid #d9d9d9;
+            border-right: 1px solid #f0f0f0;
             font-weight: 500;
             font-size: 14px;
+            text-align: center;
+        }
+
+        QHeaderView::section:hover {
+            background-color: #f0f0f0;
         }
         
         /* 统一标签样式 */
@@ -311,3 +324,51 @@ def apply_button_style(button, variant='primary'):
     # 强制刷新样式
     button.style().unpolish(button)
     button.style().polish(button)
+
+def apply_responsive_table_style(table_widget):
+    """为表格应用响应式样式"""
+    # 获取表格父窗口宽度
+    parent_width = table_widget.parent().width() if table_widget.parent() else 1200
+
+    # 根据窗口宽度调整表格样式
+    if parent_width < 1000:
+        # 小屏幕样式
+        table_widget.setStyleSheet(table_widget.styleSheet() + """
+            QTableWidget::item {
+                padding: 6px 8px;
+                font-size: 12px;
+            }
+            QHeaderView::section {
+                padding: 8px 6px;
+                font-size: 12px;
+            }
+        """)
+    elif parent_width > 1400:
+        # 大屏幕样式
+        table_widget.setStyleSheet(table_widget.styleSheet() + """
+            QTableWidget::item {
+                padding: 10px 15px;
+                font-size: 15px;
+            }
+            QHeaderView::section {
+                padding: 15px 10px;
+                font-size: 15px;
+            }
+        """)
+
+def get_responsive_dialog_size(base_width=1200, base_height=800):
+    """获取响应式对话框尺寸"""
+    try:
+        from PyQt5.QtWidgets import QApplication
+        screen = QApplication.desktop().screenGeometry()
+
+        # 计算适合的尺寸
+        max_width = int(screen.width() * 0.9)
+        max_height = int(screen.height() * 0.85)
+
+        dialog_width = min(base_width, max_width)
+        dialog_height = min(base_height, max_height)
+
+        return dialog_width, dialog_height
+    except:
+        return base_width, base_height

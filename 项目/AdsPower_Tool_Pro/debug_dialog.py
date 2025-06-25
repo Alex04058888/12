@@ -13,9 +13,9 @@ from PyQt5.QtWidgets import (QDialog, QVBoxLayout, QHBoxLayout, QPushButton,
 from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QFont
 
-# 导入iOS 26样式管理器
+# 导入AdsPower样式管理器
 try:
-    from ios26_style_manager import iOS26StyleManager
+    from adspower_style_manager import AdsPowerStyleManager as iOS26StyleManager
 except ImportError:
     # 如果导入失败，创建简化版本
     class iOS26StyleManager:

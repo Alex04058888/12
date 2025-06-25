@@ -15,6 +15,26 @@ import warnings
 warnings.filterwarnings("ignore", category=DeprecationWarning)
 warnings.filterwarnings("ignore", message=".*sipPyTypeDict.*")
 warnings.filterwarnings("ignore", message=".*deprecated.*")
+
+# 导入错误处理器
+try:
+    from error_handler import setup_global_exception_handler, log_info, log_error, safe_execute
+    ERROR_HANDLER_AVAILABLE = True
+    # 设置全局异常处理
+    setup_global_exception_handler()
+    log_info("错误处理系统已启用", "主程序")
+except ImportError:
+    ERROR_HANDLER_AVAILABLE = False
+    def log_info(msg, context=""):
+        print(f"[{context}] {msg}")
+    def log_error(msg, context=""):
+        print(f"[{context}] 错误: {msg}")
+    def safe_execute(func, *args, context="", **kwargs):
+        try:
+            return func(*args, **kwargs)
+        except Exception as e:
+            print(f"[{context}] 执行失败: {e}")
+            return None
 from PyQt5.QtWidgets import (QApplication, QMainWindow, QWidget, QVBoxLayout,
                              QHBoxLayout, QPushButton, QTableWidget, QTableWidgetItem,
                              QHeaderView, QCheckBox, QMessageBox, QComboBox, QLineEdit,
@@ -31,9 +51,9 @@ try:
     from adspower_api import AdsPowerAPIClient as AdsPowerAPI
     from rpa_engine import RPAEngine
     RPA_AVAILABLE = True
-    print("[主程序] RPA模块加载成功")
+    log_info("RPA模块加载成功", "主程序")
 except ImportError as e:
-    print(f"[主程序] 导入RPA模块失败: {e}")
+    log_error(f"导入RPA模块失败: {e}", "主程序")
     RPA_AVAILABLE = False
 
     # 创建备用类
@@ -240,6 +260,15 @@ class EnvironmentManagement(QWidget):
             self.setStyleSheet(apply_adspower_style_fixes())
         else:
             self.setStyleSheet(iOS26StyleManager.get_complete_style())
+
+        # 应用响应式表格样式（如果可用）
+        if UI_STYLE_FIX_AVAILABLE:
+            try:
+                from ui_style_fix import apply_responsive_table_style
+                # 延迟应用，等待表格创建完成
+                QTimer.singleShot(100, lambda: apply_responsive_table_style(self.table) if hasattr(self, 'table') else None)
+            except ImportError:
+                pass
 
         layout = QVBoxLayout()
         layout.setSpacing(16)  # 8px网格系统标准间距
@@ -476,17 +505,17 @@ class EnvironmentManagement(QWidget):
         header.setSectionResizeMode(9, QHeaderView.Fixed)    # 状态
         header.setSectionResizeMode(10, QHeaderView.Fixed)   # 操作
 
-        # 设置优化的列宽 - 适应1280宽度窗口，确保内容完整显示
-        self.table.setColumnWidth(0, 60)    # 选择
-        self.table.setColumnWidth(1, 140)   # 最后打开时间
-        self.table.setColumnWidth(2, 80)    # 编号/ID
+        # 设置优化的列宽 - 响应式设计，适应不同屏幕尺寸
+        self.table.setColumnWidth(0, 50)    # 选择 - 减小宽度
+        self.table.setColumnWidth(1, 120)   # 最后打开时间 - 减小宽度
+        self.table.setColumnWidth(2, 70)    # 编号/ID - 减小宽度
         self.table.setColumnWidth(3, 80)    # 分组
-        self.table.setColumnWidth(4, 180)   # 平台/名称
-        self.table.setColumnWidth(5, 160)   # 账号/密码
-        self.table.setColumnWidth(7, 120)   # IP
-        self.table.setColumnWidth(8, 140)   # 创建时间
-        self.table.setColumnWidth(9, 80)    # 状态
-        self.table.setColumnWidth(10, 140)  # 操作
+        self.table.setColumnWidth(4, 200)   # 平台/名称 - 增加宽度显示完整内容
+        self.table.setColumnWidth(5, 140)   # 账号/密码 - 减小宽度
+        self.table.setColumnWidth(7, 100)   # IP - 减小宽度
+        self.table.setColumnWidth(8, 120)   # 创建时间 - 减小宽度
+        self.table.setColumnWidth(9, 70)    # 状态 - 减小宽度
+        self.table.setColumnWidth(10, 120)  # 操作 - 减小宽度
 
         # 表格样式 - iOS 26 Liquid Glass风格
         self.table.setAlternatingRowColors(True)
@@ -666,11 +695,17 @@ class EnvironmentManagement(QWidget):
             group_id = self.group_combo.currentData() or ""
             search = self.search_edit.text().strip()
 
-            print(f"[DEBUG] 加载环境列表: 页码={self.current_page}, 每页={self.page_size}")
+            if ERROR_HANDLER_AVAILABLE:
+                log_info(f"加载环境列表: 页码={self.current_page}, 每页={self.page_size}", "环境管理")
+            else:
+                print(f"[DEBUG] 加载环境列表: 页码={self.current_page}, 每页={self.page_size}")
 
             result = self.api.get_profiles(self.current_page, self.page_size, group_id, search)
 
-            print(f"[DEBUG] API返回: code={result.get('code')}, msg={result.get('msg', '')}")
+            if ERROR_HANDLER_AVAILABLE:
+                log_info(f"API返回: code={result.get('code')}, msg={result.get('msg', '')}", "环境管理")
+            else:
+                print(f"[DEBUG] API返回: code={result.get('code')}, msg={result.get('msg', '')}")
 
             if result.get("code") == 0:
                 data = result.get("data", {})
@@ -708,6 +743,9 @@ class EnvironmentManagement(QWidget):
 
         except Exception as e:
             # 异常时尝试从文件加载或创建模拟数据
+            if ERROR_HANDLER_AVAILABLE:
+                log_error(f"加载环境列表异常: {e}", "环境管理")
+
             if self.load_profiles_from_file():
                 self.update_table()
                 if self.current_page == 1:  # 只在第一页显示警告
@@ -715,7 +753,10 @@ class EnvironmentManagement(QWidget):
             else:
                 self.create_mock_data()
                 if self.current_page == 1:  # 只在第一页显示警告
-                    QMessageBox.critical(self, "错误", f"加载环境列表失败: {e}，已创建模拟数据用于测试")
+                    error_msg = f"加载环境列表失败: {e}，已创建模拟数据用于测试"
+                    QMessageBox.critical(self, "错误", error_msg)
+                    if ERROR_HANDLER_AVAILABLE:
+                        log_error(error_msg, "环境管理")
 
     def create_mock_data(self):
         """创建模拟数据用于测试分页功能"""
@@ -1045,12 +1086,21 @@ class EnvironmentManagement(QWidget):
                 if result.get('code') == 0:
                     success_count += 1
                     self.window_states[user_id] = 'opened'
+                    if ERROR_HANDLER_AVAILABLE:
+                        log_info(f"成功打开浏览器 {user_id}", "批量操作")
                 else:
                     self.window_states[user_id] = 'closed'
-                    print(f"打开浏览器 {user_id} 失败: {result.get('msg', '')}")
+                    error_msg = result.get('msg', '未知错误')
+                    if ERROR_HANDLER_AVAILABLE:
+                        log_error(f"打开浏览器 {user_id} 失败: {error_msg}", "批量操作")
+                    else:
+                        print(f"打开浏览器 {user_id} 失败: {error_msg}")
             except Exception as e:
                 self.window_states[user_id] = 'closed'
-                print(f"打开浏览器 {user_id} 失败: {e}")
+                if ERROR_HANDLER_AVAILABLE:
+                    log_error(f"打开浏览器 {user_id} 异常: {e}", "批量操作")
+                else:
+                    print(f"打开浏览器 {user_id} 失败: {e}")
 
             self.update_table()
 
@@ -1743,18 +1793,26 @@ class EnvironmentManagement(QWidget):
                         if result.get("success"):
                             success_count += 1
                             results.append({"user_id": user_id, "success": True, "message": "执行成功"})
+                            if ERROR_HANDLER_AVAILABLE:
+                                log_info(f"RPA脚本在环境 {user_id} 执行成功", "RPA执行")
                         else:
                             failed_count += 1
-                            results.append({"user_id": user_id, "success": False, "error": result.get("error", "执行失败")})
+                            error_detail = result.get("error", "执行失败")
+                            results.append({"user_id": user_id, "success": False, "error": error_detail})
+                            if ERROR_HANDLER_AVAILABLE:
+                                log_error(f"RPA脚本在环境 {user_id} 执行失败: {error_detail}", "RPA执行")
 
                         # 关闭驱动
                         try:
-                            driver.quit()
-                        except:
-                            pass
+                            rpa_engine.close()
+                        except Exception as close_error:
+                            if ERROR_HANDLER_AVAILABLE:
+                                log_warning(f"关闭RPA引擎失败: {close_error}", "RPA执行")
                     else:
                         failed_count += 1
                         results.append({"user_id": user_id, "success": False, "error": error_msg})
+                        if ERROR_HANDLER_AVAILABLE:
+                            log_error(f"创建Selenium驱动失败: {error_msg}", "RPA执行")
                 else:
                     # RPA不可用时的模拟执行
                     import time

@@ -1,8 +1,14 @@
 {
   "api_url": "http://local.adspower.net:50325",
-  "api_key": "4bd53d80ec9409bda8db7c72237a62ae",
+  "api_key": "",
   "timeout": 30,
   "auto_start": false,
   "max_threads": 5,
-  "log_level": "INFO"
+  "log_level": "INFO",
+  "ui_settings": {
+    "window_width": 1400,
+    "window_height": 900,
+    "table_auto_resize": true,
+    "theme": "default"
+  }
 }

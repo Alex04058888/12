@@ -30,7 +30,17 @@ class TaskFlowDialog(QDialog):
     def __init__(self, parent=None, flow_data=None):
         super().__init__(parent)
         self.setWindowTitle("创建任务流程")
-        self.setFixedSize(1200, 800)
+
+        # 响应式设计 - 根据屏幕尺寸自适应
+        from PyQt5.QtWidgets import QApplication
+        screen = QApplication.desktop().screenGeometry()
+        dialog_width = min(1400, int(screen.width() * 0.9))
+        dialog_height = min(900, int(screen.height() * 0.85))
+        self.resize(dialog_width, dialog_height)
+
+        # 设置最小尺寸，确保内容完整显示
+        self.setMinimumSize(1000, 600)
+
         self.setModal(False)  # 设置为非模态对话框，允许操作主界面
 
         # 用于编辑时预填充数据
@@ -166,7 +176,9 @@ class TaskFlowDialog(QDialog):
     def create_left_panel(self, main_layout):
         """创建左侧操作选项面板 - AdsPower风格"""
         left_widget = QWidget()
-        left_widget.setFixedWidth(260)
+        # 响应式宽度设计 - 根据对话框宽度调整
+        panel_width = max(280, min(320, int(self.width() * 0.25)))
+        left_widget.setFixedWidth(panel_width)
         left_widget.setStyleSheet("""
             QWidget {
                 background-color: #ffffff;
