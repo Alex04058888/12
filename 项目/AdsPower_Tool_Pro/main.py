@@ -50,8 +50,12 @@ from PyQt5.QtGui import QIcon, QFont, QCursor, QPalette, QColor
 try:
     from adspower_api import AdsPowerAPIClient as AdsPowerAPI
     from rpa_engine import RPAEngine
+    from rpa_config_converter import config_converter
+    from rpa_config_standard import adspower_standard_config
+    from rpa_executor_standard import AdsPowerStandardExecutor
     RPA_AVAILABLE = True
     log_info("RPA模块加载成功", "主程序")
+    log_info("AdsPower标准配置模块加载成功", "主程序")
 except ImportError as e:
     log_error(f"导入RPA模块失败: {e}", "主程序")
     RPA_AVAILABLE = False
@@ -2132,6 +2136,12 @@ class EnvironmentManagement(QWidget):
 
         menu.addSeparator()
 
+        # 添加RPA批量操作
+        rpa_batch_action = menu.addAction("🤖 RPA批量操作")
+        rpa_batch_action.triggered.connect(self.show_rpa_batch_dialog)
+
+        menu.addSeparator()
+
         export_action = menu.addAction("📤 批量导出")
         export_action.triggered.connect(self.export_selected)
 
@@ -2145,6 +2155,23 @@ class EnvironmentManagement(QWidget):
 
         # 显示菜单
         menu.exec_(QCursor.pos())
+
+    def show_rpa_batch_dialog(self):
+        """显示RPA批量操作对话框"""
+        if not self.selected_profiles:
+            QMessageBox.information(self, "提示", "请先选择要操作的环境")
+            return
+
+        try:
+            from rpa_batch_dialog import RPABatchDialog
+
+            dialog = RPABatchDialog(self, self.selected_profiles)
+            dialog.exec_()
+
+        except ImportError as e:
+            QMessageBox.critical(self, "错误", f"RPA批量操作功能不可用: {str(e)}")
+        except Exception as e:
+            QMessageBox.critical(self, "错误", f"打开RPA批量操作对话框失败: {str(e)}")
 
     def manage_tags(self):
         QMessageBox.information(self, "标签", "标签管理功能")
@@ -5417,6 +5444,13 @@ class AdsPowerMainWindow(QMainWindow):
 
         tools_menu.addSeparator()
 
+        # RPA工具
+        rpa_batch_action = QAction("🤖 RPA批量操作", self)
+        rpa_batch_action.triggered.connect(self.show_rpa_batch_from_menu)
+        tools_menu.addAction(rpa_batch_action)
+
+        tools_menu.addSeparator()
+
         reinstall_action = QAction("🔄 重新安装依赖", self)
         reinstall_action.triggered.connect(self.reinstall_dependencies)
         tools_menu.addAction(reinstall_action)
@@ -5431,6 +5465,28 @@ class AdsPowerMainWindow(QMainWindow):
         about_action = QAction("关于", self)
         about_action.triggered.connect(self.show_about)
         help_menu.addAction(about_action)
+
+    def show_rpa_batch_from_menu(self):
+        """从菜单栏显示RPA批量操作对话框"""
+        # 检查是否有选中的环境
+        if hasattr(self, 'env_tab') and hasattr(self.env_tab, 'selected_profiles'):
+            selected = self.env_tab.selected_profiles
+        else:
+            selected = []
+
+        if not selected:
+            # 如果没有选中环境，提示用户先选择
+            QMessageBox.information(
+                self, "提示",
+                "请先在环境管理页面选择要操作的环境，然后再使用RPA批量操作功能。"
+            )
+            # 切换到环境管理页面
+            if hasattr(self, 'tabs'):
+                self.tabs.setCurrentIndex(0)  # 假设环境管理是第一个标签页
+            return
+
+        # 调用RPA批量操作对话框
+        self.show_rpa_batch_dialog()
 
     def show_deploy_dialog(self):
         """显示一键部署对话框"""

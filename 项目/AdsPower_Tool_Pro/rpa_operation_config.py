@@ -19,6 +19,18 @@ class RPAOperationConfigDialog(QDialog):
     
     def __init__(self, operation_name, parent=None):
         super().__init__(parent)
+
+    def get_standard_config(self, operation_name: str) -> dict:
+        """获取操作的标准配置"""
+        return adspower_standard_config.get_all_standard_configs().get(operation_name, {})
+    
+    def convert_to_standard_format(self, operation_name: str, config_data: dict) -> dict:
+        """将配置数据转换为标准格式"""
+        return config_converter.convert_to_standard(operation_name, config_data)
+    
+    def validate_standard_config(self, operation_name: str, config_data: dict) -> dict:
+        """验证标准配置"""
+        return config_converter.validate_standard_config(operation_name, config_data)
         self.operation_name = operation_name
         self.config_data = {}
         self.init_ui()

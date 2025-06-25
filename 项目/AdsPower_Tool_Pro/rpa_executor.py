@@ -42,6 +42,8 @@ from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.common.action_chains import ActionChains
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
+from rpa_config_converter import convert_to_adspower_standard, validate_config
+from rpa_executor_standard import AdsPowerStandardExecutor
 from selenium.webdriver.support.ui import Select
 from selenium.common.exceptions import TimeoutException, NoSuchElementException, WebDriverException
 from selenium.webdriver.chrome.service import Service
@@ -94,6 +96,29 @@ class RPAExecutor:
 
     def __init__(self, browser_driver=None, task_name="RPA_Task"):
         self.driver = browser_driver
+
+    def execute_with_standard_config(self, step_config: dict) -> dict:
+        """使用标准配置执行步骤"""
+        operation = step_config.get('operation', '')
+        
+        # 验证配置
+        validation = validate_config(operation, step_config)
+        if not validation['valid']:
+            return {
+                "success": False,
+                "message": f"配置验证失败: {', '.join(validation['errors'])}"
+            }
+        
+        # 执行操作
+        if hasattr(self, f"{operation.replace(' ', '_').lower()}"):
+            method = getattr(self, f"{operation.replace(' ', '_').lower()}")
+            return method(step_config)
+        else:
+            return {"success": False, "message": f"不支持的操作: {operation}"}
+    
+    def convert_legacy_config(self, operation: str, legacy_config: dict) -> dict:
+        """转换旧格式配置为标准格式"""
+        return convert_to_adspower_standard(operation, legacy_config)
         self.loop_stack = []  # 循环栈
 
         # 初始化变量管理、数据管理、日志、异常处理和AdsPower API系统
@@ -484,25 +509,58 @@ class RPAExecutor:
             return {"success": False, "message": f"滚动页面失败: {str(e)}"}
     
     def click_element(self, config):
-        """点击元素 - 完全按照AdsPower原版实现"""
+        """点击元素 - 完全按照AdsPower官方标准"""
         try:
-            # 获取配置参数
-            selector_type = config.get('click_selector_type', 'Selector')
-            selector = config.get('click_selector', '')
-            click_type = config.get('click_type', '鼠标左键')
-            click_action = config.get('click_action', '单击')
-            element_order = config.get('click_element_order', 1) - 1
+            # 兼容新旧参数格式
+            if 'selector' in config:
+                # 新标准格式 - 完全按照AdsPower官方
+                selector = config.get('selector', '')
+                stored_element = config.get('stored_element')
+                element_order_config = config.get('element_order', 1)
+                click_type = config.get('click_type', '鼠标左键')
+                key_type = config.get('key_type', '单击')
 
-            if not selector:
-                return {"success": False, "message": "未指定元素选择器"}
+                # 处理元素顺序（支持固定值和区间随机）
+                if isinstance(element_order_config, dict):
+                    order_type = element_order_config.get('type', '固定值')
+                    if order_type == '区间随机':
+                        import random
+                        min_val = element_order_config.get('value', 1)
+                        max_val = element_order_config.get('max_value', 1)
+                        element_order = random.randint(min_val, max_val) - 1  # 转换为0基索引
+                    else:
+                        element_order = element_order_config.get('value', 1) - 1
+                else:
+                    element_order = element_order_config - 1 if element_order_config else 0
 
-            # 根据选择器类型查找元素
-            if selector_type == 'XPath':
-                elements = self.driver.find_elements(By.XPATH, selector)
-            elif selector_type == '文本':
-                elements = self.driver.find_elements(By.XPATH, f"//*[contains(text(), '{selector}')]")
-            else:  # Selector (CSS)
-                elements = self.driver.find_elements(By.CSS_SELECTOR, selector)
+                click_action = key_type  # 使用官方的key_type参数
+            else:
+                # 旧格式兼容
+                selector = config.get('click_selector', '')
+                stored_element = None
+                click_type = config.get('click_type', '鼠标左键')
+                click_action = config.get('click_action', '单击')
+                element_order = config.get('click_element_order', 1) - 1
+
+            if not selector and not stored_element:
+                return {"success": False, "message": "选择器或储存的元素对象不能为空"}
+
+            # 使用储存的元素对象或选择器查找元素
+            if stored_element and stored_element != "无":
+                # 使用储存的元素对象
+                elements = [self.variables.get(stored_element)]
+                if not elements[0]:
+                    return {"success": False, "message": f"储存的元素对象不存在: {stored_element}"}
+            else:
+                # 使用选择器查找元素 - AdsPower官方支持CSS选择器
+                try:
+                    elements = self.driver.find_elements(By.CSS_SELECTOR, selector)
+                except:
+                    # 如果CSS选择器失败，尝试XPath
+                    try:
+                        elements = self.driver.find_elements(By.XPATH, selector)
+                    except:
+                        return {"success": False, "message": f"无效的选择器: {selector}"}
 
             if not elements or element_order >= len(elements):
                 return {"success": False, "message": f"未找到指定元素 (序号: {element_order + 1})"}
@@ -850,34 +908,80 @@ class RPAExecutor:
             return {"success": False, "message": f"元素聚焦失败: {str(e)}"}
 
     def input_content(self, config):
-        """输入内容 - 完全按照AdsPower原版实现"""
+        """输入内容 - 完全按照AdsPower官方标准"""
         try:
-            # 获取配置参数
-            selector_type = config.get('input_selector_type', 'Selector')
-            selector = config.get('input_selector', '')
-            content = config.get('input_content', '')
-            input_method = config.get('input_method', '覆盖')
-            input_interval = config.get('input_interval', 100) / 1000  # 转换为秒
-            element_order = config.get('input_element_order', 1) - 1
+            # 兼容新旧参数格式
+            if 'selector' in config:
+                # 新标准格式 - 完全按照AdsPower官方
+                selector = config.get('selector', '')
+                stored_element = config.get('stored_element')
+                element_order = config.get('element_order', 1)
+                content = config.get('content', '')
+                content_type = config.get('content_type', '顺序选取')
+                input_interval = config.get('input_interval', 300) / 1000  # 转换为秒
+                clear_before = config.get('clear_before', True)
+            else:
+                # 旧格式兼容
+                selector = config.get('input_selector', '')
+                stored_element = None
+                element_order = config.get('input_element_order', 1)
+                content = config.get('input_content', '')
+                content_type = '顺序选取'
+                input_interval = config.get('input_interval', 100) / 1000
+                clear_before = config.get('input_method', '覆盖') == '覆盖'
 
-            if not selector:
-                return {"success": False, "message": "未指定元素选择器"}
+            if not selector and not stored_element:
+                return {"success": False, "message": "选择器或储存的元素对象不能为空"}
 
             if not content:
                 return {"success": False, "message": "未指定输入内容"}
 
-            # 根据选择器类型查找元素
-            if selector_type == 'XPath':
-                elements = self.driver.find_elements(By.XPATH, selector)
-            elif selector_type == '文本':
-                elements = self.driver.find_elements(By.XPATH, f"//*[contains(text(), '{selector}')]")
-            else:  # Selector (CSS)
-                elements = self.driver.find_elements(By.CSS_SELECTOR, selector)
+            # 处理多行内容和内容选取方式
+            content_lines = content.strip().split('\n') if isinstance(content, str) else [str(content)]
 
-            if not elements or element_order >= len(elements):
-                return {"success": False, "message": f"未找到指定输入元素 (序号: {element_order + 1})"}
+            if content_type == '随机选取':
+                import random
+                selected_content = random.choice(content_lines)
+            elif content_type == '随机取数':
+                # 假设内容格式为 "min-max"
+                if '-' in content and len(content_lines) == 1:
+                    try:
+                        min_val, max_val = map(int, content.split('-'))
+                        selected_content = str(random.randint(min_val, max_val))
+                    except:
+                        selected_content = content_lines[0]
+                else:
+                    selected_content = content_lines[0]
+            elif content_type == '使用变量':
+                # 从变量中获取内容
+                var_name = content.strip()
+                selected_content = str(self.variables.get(var_name, content))
+            else:  # 顺序选取
+                # 这里可以根据环境ID或其他逻辑选择，暂时使用第一个
+                selected_content = content_lines[0]
 
-            element = elements[element_order]
+            # 使用储存的元素对象或选择器查找元素
+            if stored_element and stored_element != "无":
+                # 使用储存的元素对象
+                elements = [self.variables.get(stored_element)]
+                if not elements[0]:
+                    return {"success": False, "message": f"储存的元素对象不存在: {stored_element}"}
+            else:
+                # 使用选择器查找元素 - AdsPower官方支持CSS选择器
+                try:
+                    elements = self.driver.find_elements(By.CSS_SELECTOR, selector)
+                except:
+                    # 如果CSS选择器失败，尝试XPath
+                    try:
+                        elements = self.driver.find_elements(By.XPATH, selector)
+                    except:
+                        return {"success": False, "message": f"无效的选择器: {selector}"}
+
+            element_index = element_order - 1 if element_order > 0 else 0
+            if not elements or element_index >= len(elements):
+                return {"success": False, "message": f"未找到指定输入元素 (序号: {element_order})"}
+
+            element = elements[element_index]
 
             # 滚动到元素可见
             self.driver.execute_script("arguments[0].scrollIntoView({block: 'center'});", element)
@@ -887,31 +991,38 @@ class RPAExecutor:
             element.click()
             time.sleep(0.1)
 
-            # 根据输入方式处理内容
-            if input_method == '覆盖':
-                # AdsPower原版：清除现有内容后输入
+            # 根据清除选项处理现有内容
+            if clear_before:
+                # AdsPower原版：清除现有内容后输入（模拟Ctrl+A Del）
                 element.clear()
                 # 使用Ctrl+A确保全选
                 ActionChains(self.driver).key_down(Keys.CONTROL).send_keys('a').key_up(Keys.CONTROL).perform()
                 time.sleep(0.1)
-            # 追加模式不需要清除
+                # 删除选中内容
+                element.send_keys(Keys.DELETE)
+                time.sleep(0.1)
 
             # 逐字符输入内容（模拟真实输入）
-            if content:
+            if selected_content:
                 if input_interval > 0:
-                    # 有间隔的逐字符输入
-                    for char in content:
+                    # 有间隔的逐字符输入 - AdsPower官方标准
+                    for char in selected_content:
                         element.send_keys(char)
                         time.sleep(input_interval)
                 else:
                     # 直接输入全部内容
-                    element.send_keys(content)
+                    element.send_keys(selected_content)
 
             # 触发change事件确保内容被识别
             self.driver.execute_script("arguments[0].dispatchEvent(new Event('input', {bubbles: true}));", element)
             self.driver.execute_script("arguments[0].dispatchEvent(new Event('change', {bubbles: true}));", element)
 
-            return {"success": True, "message": "输入内容成功", "content_length": len(content)}
+            return {
+                "success": True,
+                "message": f"输入内容成功 - 选择器: {selector}, 内容长度: {len(selected_content)}",
+                "content_length": len(selected_content),
+                "content_type": content_type
+            }
         except Exception as e:
             return {"success": False, "message": f"输入内容失败: {str(e)}"}
 
