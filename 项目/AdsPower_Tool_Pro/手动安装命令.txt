@@ -1,0 +1,42 @@
+========================================
+  手动安装依赖包命令
+========================================
+
+如果批处理文件无法运行，请使用以下命令手动安装：
+
+【第一步：打开命令提示符】
+1. 按 Win+R
+2. 输入 cmd
+3. 按回车
+
+【第二步：切换到项目目录】
+cd /d "C:\Users\1\Desktop\123\2--1.0\AdsPower_Tool_Pro"
+
+【第三步：逐个安装依赖包】
+python -m pip install --upgrade pip --user
+python -m pip install PyQt5==5.15.9 --user
+python -m pip install requests --user
+python -m pip install selenium --user
+python -m pip install beautifulsoup4 --user
+python -m pip install lxml --user
+python -m pip install openpyxl --user
+python -m pip install pandas --user
+python -m pip install Pillow --user
+python -m pip install pyautogui --user
+python -m pip install webdriver-manager --user
+
+【第四步：验证安装】
+python -c "import PyQt5; print('PyQt5: OK')"
+python -c "import requests; print('requests: OK')"
+python -c "import selenium; print('selenium: OK')"
+
+【第五步：启动程序】
+双击 "启动.bat" 或运行: python main.py
+
+========================================
+注意事项：
+- 确保Python已正确安装
+- 确保网络连接正常
+- 如果安装失败，可以尝试使用国内镜像：
+  python -m pip install 包名 -i https://pypi.tuna.tsinghua.edu.cn/simple/
+========================================

@@ -1,0 +1,45 @@
+[
+  {
+    "id": "task_001",
+    "name": "批量登录任务",
+    "status": "已停止",
+    "start_time": "2024-01-15 10:30:00",
+    "progress": 75,
+    "speed": "0/min",
+    "total_accounts": 100,
+    "completed_accounts": 75,
+    "failed_accounts": 2,
+    "pause_count": 2,
+    "resume_count": 2,
+    "pause_time": "2025-06-21 11:37:37",
+    "resume_time": "2025-06-21 11:37:39",
+    "stop_time": "2025-06-21 11:37:42"
+  },
+  {
+    "id": "task_002",
+    "name": "数据采集任务",
+    "status": "已完成",
+    "start_time": "2024-01-14 14:20:00",
+    "progress": 100,
+    "speed": "3/min",
+    "total_accounts": 50,
+    "completed_accounts": 48,
+    "failed_accounts": 2,
+    "pause_count": 2,
+    "resume_count": 2
+  },
+  {
+    "id": "task_003",
+    "name": "自动发布任务",
+    "status": "已停止",
+    "start_time": "2024-01-16 09:15:00",
+    "progress": 30,
+    "speed": "0/min",
+    "total_accounts": 80,
+    "completed_accounts": 24,
+    "failed_accounts": 1,
+    "pause_count": 1,
+    "resume_count": 0,
+    "stop_time": "2025-06-21 11:37:45"
+  }
+]

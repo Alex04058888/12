@@ -1,0 +1,90 @@
+[
+  {
+    "id": "template_001",
+    "name": "登录模板",
+    "type": "RPA流程",
+    "category": "登录相关",
+    "created_time": "2024-01-15 10:30:00",
+    "usage_count": 25,
+    "description": "通用登录流程模板",
+    "template_data": {
+      "steps": [
+        {
+          "type": "navigate",
+          "params": {
+            "url": "https://example.com/login"
+          }
+        },
+        {
+          "type": "input",
+          "params": {
+            "by": "NAME",
+            "value": "username",
+            "text": "{username}"
+          }
+        },
+        {
+          "type": "input",
+          "params": {
+            "by": "NAME",
+            "value": "password",
+            "text": "{password}"
+          }
+        },
+        {
+          "type": "click",
+          "params": {
+            "by": "XPATH",
+            "value": "//button[@type='submit']"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "id": "template_002",
+    "name": "数据采集模板",
+    "type": "RPA流程",
+    "category": "数据处理",
+    "created_time": "2024-01-16 14:20:00",
+    "usage_count": 12,
+    "description": "通用数据采集流程模板",
+    "template_data": {
+      "steps": [
+        {
+          "type": "navigate",
+          "params": {
+            "url": "https://example.com/data"
+          }
+        },
+        {
+          "type": "wait",
+          "params": {
+            "seconds": 2
+          }
+        },
+        {
+          "type": "scroll",
+          "params": {
+            "direction": "down",
+            "pixels": 500
+          }
+        }
+      ]
+    }
+  },
+  {
+    "id": "template_003",
+    "name": "浏览器配置模板",
+    "type": "环境配置",
+    "category": "环境设置",
+    "created_time": "2024-01-17 09:15:00",
+    "usage_count": 8,
+    "description": "标准浏览器环境配置模板",
+    "template_data": {
+      "proxy_type": "HTTP",
+      "user_agent": "Chrome/120.0.0.0",
+      "screen_resolution": "1920x1080"
+    }
+  }
+]

@@ -1,0 +1,8 @@
+{
+  "api_url": "http://local.adspower.net:50325",
+  "api_key": "4bd53d80ec9409bda8db7c72237a62ae",
+  "timeout": 30,
+  "auto_start": false,
+  "max_threads": 5,
+  "log_level": "INFO"
+}

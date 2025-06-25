@@ -1,0 +1,101 @@
+========================================
+  AdsPower Tool Pro - 新电脑安装指南
+========================================
+
+【重要说明】
+安装过程分为两个独立步骤：
+1. 第一步：安装软件环境（Python）
+2. 第二步：安装依赖包（Python库）
+
+========================================
+方法一：分步自动安装（推荐）
+========================================
+
+【第一步：安装软件环境】
+1. 双击 "安装软件.bat"
+2. 或者双击 "install_software.py"
+3. 选择自动安装或手动安装Python
+4. 如果选择自动安装，完成后需重启电脑
+
+【第二步：安装依赖包】
+1. 确保第一步已完成
+2. 双击 "安装依赖.bat"
+3. 或者双击 "install_dependencies.py"
+4. 等待所有Python包安装完成
+
+如果自动安装失败，可以：
+- 查看 "手动安装命令.txt"
+- 按照命令逐个手动安装
+
+========================================
+方法二：手动安装（如果自动安装失败）
+========================================
+
+【第一步：安装Python】
+同上
+
+【第二步：手动安装依赖包】
+1. 按 Win+R，输入 cmd，回车
+2. 输入以下命令（一行一行执行）：
+
+cd /d "C:\Users\1\Desktop\123\2--1.0\AdsPower_Tool_Pro"
+python -m pip install --upgrade pip --user
+python -m pip install PyQt5==5.15.9 --user
+python -m pip install requests --user
+python -m pip install selenium --user
+python -m pip install beautifulsoup4 --user
+python -m pip install lxml --user
+python -m pip install openpyxl --user
+python -m pip install pandas --user
+python -m pip install Pillow --user
+python -m pip install pyautogui --user
+python -m pip install webdriver-manager --user
+
+【第三步：验证安装】
+在命令行中输入：
+python -c "import PyQt5; print('PyQt5: OK')"
+python -c "import requests; print('requests: OK')"
+python -c "import selenium; print('selenium: OK')"
+
+如果都显示 "OK"，说明安装成功。
+
+========================================
+启动程序
+========================================
+
+【第一步：启动AdsPower】
+1. 安装并启动AdsPower客户端
+2. 在设置中开启API功能
+3. 确保API地址为: http://local.adspower.com:50325
+
+【第二步：启动工具】
+1. 双击 "启动.bat"
+2. 或者在命令行中运行: python main.py
+
+========================================
+故障排除
+========================================
+
+【如果Python命令不识别】
+- 重新安装Python，确保勾选"Add Python to PATH"
+- 重启电脑后再试
+
+【如果包安装失败】
+- 检查网络连接
+- 尝试使用国内镜像：
+  python -m pip install 包名 -i https://pypi.tuna.tsinghua.edu.cn/simple/
+
+【如果程序无法启动】
+- 确保AdsPower客户端正在运行
+- 检查config.json配置文件
+- 查看logs目录中的错误日志
+
+========================================
+技术支持
+========================================
+
+如果仍有问题，请：
+1. 检查Python版本: python --version
+2. 检查已安装包: pip list
+3. 查看错误日志
+4. 联系技术支持
