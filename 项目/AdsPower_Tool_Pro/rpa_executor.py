@@ -44,6 +44,7 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from rpa_config_converter import convert_to_adspower_standard, validate_config
 from rpa_executor_standard import AdsPowerStandardExecutor
+from rpa_missing_functions import missing_functions
 from selenium.webdriver.support.ui import Select
 from selenium.common.exceptions import TimeoutException, NoSuchElementException, WebDriverException
 from selenium.webdriver.chrome.service import Service
@@ -119,6 +120,169 @@ class RPAExecutor:
     def convert_legacy_config(self, operation: str, legacy_config: dict) -> dict:
         """转换旧格式配置为标准格式"""
         return convert_to_adspower_standard(operation, legacy_config)
+
+    # ==================== 新增官方节点执行方法 ====================
+
+    def import_excel(self, config):
+        """导入Excel - 官方节点"""
+        try:
+            # 设置驱动器到缺失功能模块
+            missing_functions.driver = self.driver
+            missing_functions.variables = self.variables
+
+            return missing_functions.import_excel(config)
+
+        except Exception as e:
+            error_msg = f"导入Excel失败: {str(e)}"
+            self.log_error(error_msg)
+            return {"success": False, "message": error_msg}
+
+    def excel_extract_field(self, config):
+        """Excel字段提取 - 官方节点"""
+        try:
+            missing_functions.driver = self.driver
+            missing_functions.variables = self.variables
+
+            return missing_functions.import_excel_extract_field(config)
+
+        except Exception as e:
+            error_msg = f"Excel字段提取失败: {str(e)}"
+            self.log_error(error_msg)
+            return {"success": False, "message": error_msg}
+
+    def click_inside_iframe(self, config):
+        """iframe内点击 - 官方节点"""
+        try:
+            missing_functions.driver = self.driver
+            missing_functions.variables = self.variables
+
+            return missing_functions.click_inside_iframe(config)
+
+        except Exception as e:
+            error_msg = f"iframe内点击失败: {str(e)}"
+            self.log_error(error_msg)
+            return {"success": False, "message": error_msg}
+
+    def else_condition(self, config):
+        """Else条件 - 官方节点"""
+        try:
+            return missing_functions.else_condition(config)
+
+        except Exception as e:
+            error_msg = f"Else条件执行失败: {str(e)}"
+            self.log_error(error_msg)
+            return {"success": False, "message": error_msg}
+
+    def breakpoint_debug(self, config):
+        """断点调试 - 官方节点"""
+        try:
+            return missing_functions.breakpoint(config)
+
+        except Exception as e:
+            error_msg = f"断点调试失败: {str(e)}"
+            self.log_error(error_msg)
+            return {"success": False, "message": error_msg}
+
+    def switch_profile(self, config):
+        """切换环境 - 官方节点"""
+        try:
+            result = missing_functions.switch_profile(config)
+
+            # 如果切换成功，更新当前驱动器
+            if result.get("success") and "webdriver" in result:
+                # 这里需要根据实际情况更新驱动器
+                pass
+
+            return result
+
+        except Exception as e:
+            error_msg = f"切换环境失败: {str(e)}"
+            self.log_error(error_msg)
+            return {"success": False, "message": error_msg}
+
+    def set_thread_delay(self, config):
+        """设置线程延迟 - 官方节点"""
+        try:
+            return missing_functions.set_thread_delay(config)
+
+        except Exception as e:
+            error_msg = f"设置线程延迟失败: {str(e)}"
+            self.log_error(error_msg)
+            return {"success": False, "message": error_msg}
+
+    def throw_error(self, config):
+        """抛出错误 - 官方节点"""
+        try:
+            missing_functions.execution_log = self.execution_log
+            return missing_functions.throw_error(config)
+
+        except Exception as e:
+            error_msg = f"抛出错误失败: {str(e)}"
+            self.log_error(error_msg)
+            return {"success": False, "message": error_msg}
+
+    def set_process_status(self, config):
+        """设置流程状态 - 官方节点"""
+        try:
+            missing_functions.variables = self.variables
+            return missing_functions.set_process_status(config)
+
+        except Exception as e:
+            error_msg = f"设置流程状态失败: {str(e)}"
+            self.log_error(error_msg)
+            return {"success": False, "message": error_msg}
+
+    def openai_request(self, config):
+        """OpenAI请求 - 官方节点"""
+        try:
+            missing_functions.variables = self.variables
+            return missing_functions.openai_request(config)
+
+        except Exception as e:
+            error_msg = f"OpenAI请求失败: {str(e)}"
+            self.log_error(error_msg)
+            return {"success": False, "message": error_msg}
+
+    def http_request(self, config):
+        """HTTP请求 - 官方节点"""
+        try:
+            missing_functions.variables = self.variables
+            return missing_functions.http_request(config)
+
+        except Exception as e:
+            error_msg = f"HTTP请求失败: {str(e)}"
+            self.log_error(error_msg)
+            return {"success": False, "message": error_msg}
+
+    def google_sheets(self, config):
+        """Google表格 - 官方节点"""
+        try:
+            return missing_functions.google_sheets_integration(config)
+
+        except Exception as e:
+            error_msg = f"Google表格操作失败: {str(e)}"
+            self.log_error(error_msg)
+            return {"success": False, "message": error_msg}
+
+    def slack_webhook(self, config):
+        """Slack通知 - 官方节点"""
+        try:
+            return missing_functions.slack_webhook(config)
+
+        except Exception as e:
+            error_msg = f"Slack通知失败: {str(e)}"
+            self.log_error(error_msg)
+            return {"success": False, "message": error_msg}
+
+    def send_email(self, config):
+        """发送邮件 - 官方节点"""
+        try:
+            return missing_functions.send_email(config)
+
+        except Exception as e:
+            error_msg = f"发送邮件失败: {str(e)}"
+            self.log_error(error_msg)
+            return {"success": False, "message": error_msg}
         self.loop_stack = []  # 循环栈
 
         # 初始化变量管理、数据管理、日志、异常处理和AdsPower API系统

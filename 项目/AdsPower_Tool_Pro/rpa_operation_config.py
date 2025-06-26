@@ -208,6 +208,42 @@ class RPAOperationConfigDialog(QDialog):
         elif self.operation_name == "关闭浏览器":
             self.create_close_browser_config(config_layout)
 
+        # 新增官方节点 - Excel相关功能
+        elif self.operation_name == "导入Excel":
+            self.create_import_excel_config(config_layout)
+        elif self.operation_name == "Excel字段提取":
+            self.create_excel_extract_field_config(config_layout)
+
+        # 新增官方节点 - iframe操作
+        elif self.operation_name == "iframe内点击":
+            self.create_click_inside_iframe_config(config_layout)
+
+        # 新增官方节点 - 流程控制高级功能
+        elif self.operation_name == "Else条件":
+            self.create_else_condition_config(config_layout)
+        elif self.operation_name == "断点调试":
+            self.create_breakpoint_config(config_layout)
+        elif self.operation_name == "切换环境":
+            self.create_switch_profile_config(config_layout)
+        elif self.operation_name == "设置线程延迟":
+            self.create_set_thread_delay_config(config_layout)
+        elif self.operation_name == "抛出错误":
+            self.create_throw_error_config(config_layout)
+        elif self.operation_name == "设置流程状态":
+            self.create_set_process_status_config(config_layout)
+
+        # 新增官方节点 - 第三方服务集成
+        elif self.operation_name == "OpenAI请求":
+            self.create_openai_request_config(config_layout)
+        elif self.operation_name == "HTTP请求":
+            self.create_http_request_config(config_layout)
+        elif self.operation_name == "Google表格":
+            self.create_google_sheets_config(config_layout)
+        elif self.operation_name == "Slack通知":
+            self.create_slack_webhook_config(config_layout)
+        elif self.operation_name == "发送邮件":
+            self.create_send_email_config(config_layout)
+
         # 兼容旧版本操作名称和AdsPower原始操作名称
         elif self.operation_name in ["新建标签页"]:
             self.create_new_tab_config(config_layout)
@@ -924,7 +960,23 @@ class RPAOperationConfigDialog(QDialog):
             "For循环数据": "循环遍历数据集合",
             "While循环": "根据条件循环执行",
             "退出循环": "跳出当前循环",
-            "关闭浏览器": "关闭当前浏览器"
+            "关闭浏览器": "关闭当前浏览器",
+
+            # 新增官方节点描述
+            "导入Excel": "从Excel文件导入数据",
+            "Excel字段提取": "从Excel文件中提取指定字段",
+            "iframe内点击": "在iframe内点击指定元素",
+            "Else条件": "与IF条件配对的else分支",
+            "断点调试": "设置调试断点暂停执行",
+            "切换环境": "切换到指定的AdsPower环境",
+            "设置线程延迟": "设置线程执行延迟时间",
+            "抛出错误": "主动抛出自定义错误",
+            "设置流程状态": "设置当前流程的执行状态",
+            "OpenAI请求": "调用OpenAI API进行AI对话",
+            "HTTP请求": "发送HTTP请求到指定URL",
+            "Google表格": "操作Google表格数据",
+            "Slack通知": "发送消息到Slack频道",
+            "发送邮件": "通过SMTP发送邮件"
         }
 
         desc_text = operation_descriptions.get(self.operation_name, "执行指定的RPA操作")
@@ -3687,7 +3739,372 @@ class RPAOperationConfigDialog(QDialog):
             return
 
         # 保存配置数据
-        self.config_data = config_data.copy()
+        self.config_data = config_data
+
+    # ==================== 新增官方节点配置方法 ====================
+
+    def create_import_excel_config(self, parent_layout):
+        """创建导入Excel配置 - 官方节点"""
+        excel_group = QGroupBox("导入Excel设置")
+        excel_layout = QFormLayout(excel_group)
+
+        # 文件路径
+        file_layout = QHBoxLayout()
+        self.excel_file_path = QLineEdit()
+        self.excel_file_path.setPlaceholderText("选择Excel文件路径")
+        file_browse_btn = QPushButton("浏览")
+        file_browse_btn.clicked.connect(self._browse_excel_file)
+        file_layout.addWidget(self.excel_file_path)
+        file_layout.addWidget(file_browse_btn)
+        excel_layout.addRow("Excel文件:", file_layout)
+
+        # 工作表名称
+        self.excel_sheet_name = QLineEdit()
+        self.excel_sheet_name.setPlaceholderText("工作表名称或索引(默认为0)")
+        excel_layout.addRow("工作表:", self.excel_sheet_name)
+
+        # 保存变量名
+        self.excel_save_variable = QLineEdit()
+        self.excel_save_variable.setPlaceholderText("保存数据的变量名")
+        self.excel_save_variable.setText("excel_data")
+        excel_layout.addRow("保存到变量:", self.excel_save_variable)
+
+        parent_layout.addWidget(excel_group)
+
+    def create_excel_extract_field_config(self, parent_layout):
+        """创建Excel字段提取配置 - 官方节点"""
+        extract_group = QGroupBox("Excel字段提取设置")
+        extract_layout = QFormLayout(extract_group)
+
+        # 文件路径
+        file_layout = QHBoxLayout()
+        self.extract_excel_file_path = QLineEdit()
+        self.extract_excel_file_path.setPlaceholderText("选择Excel文件路径")
+        file_browse_btn = QPushButton("浏览")
+        file_browse_btn.clicked.connect(self._browse_extract_excel_file)
+        file_layout.addWidget(self.extract_excel_file_path)
+        file_layout.addWidget(file_browse_btn)
+        extract_layout.addRow("Excel文件:", file_layout)
+
+        # 工作表名称
+        self.extract_excel_sheet_name = QLineEdit()
+        self.extract_excel_sheet_name.setPlaceholderText("工作表名称或索引(默认为0)")
+        extract_layout.addRow("工作表:", self.extract_excel_sheet_name)
+
+        # 字段名称
+        self.extract_field_name = QLineEdit()
+        self.extract_field_name.setPlaceholderText("要提取的字段名称")
+        extract_layout.addRow("字段名称:", self.extract_field_name)
+
+        # 保存变量名
+        self.extract_save_variable = QLineEdit()
+        self.extract_save_variable.setPlaceholderText("保存提取结果的变量名")
+        self.extract_save_variable.setText("extracted_field")
+        extract_layout.addRow("保存到变量:", self.extract_save_variable)
+
+        parent_layout.addWidget(extract_group)
+
+    def create_click_inside_iframe_config(self, parent_layout):
+        """创建iframe内点击配置 - 官方节点"""
+        iframe_group = QGroupBox("iframe内点击设置")
+        iframe_layout = QFormLayout(iframe_group)
+
+        # iframe选择器
+        self.iframe_selector = QLineEdit()
+        self.iframe_selector.setPlaceholderText("iframe元素的选择器")
+        iframe_layout.addRow("iframe选择器:", self.iframe_selector)
+
+        # 元素选择器
+        self.iframe_element_selector = QLineEdit()
+        self.iframe_element_selector.setPlaceholderText("iframe内要点击的元素选择器")
+        iframe_layout.addRow("元素选择器:", self.iframe_element_selector)
+
+        parent_layout.addWidget(iframe_group)
+
+    def _browse_excel_file(self):
+        """浏览Excel文件"""
+        file_path, _ = QFileDialog.getOpenFileName(
+            self, "选择Excel文件", "", "Excel文件 (*.xlsx *.xls)"
+        )
+        if file_path:
+            self.excel_file_path.setText(file_path)
+
+    def _browse_extract_excel_file(self):
+        """浏览Excel文件用于字段提取"""
+        file_path, _ = QFileDialog.getOpenFileName(
+            self, "选择Excel文件", "", "Excel文件 (*.xlsx *.xls)"
+        )
+        if file_path:
+            self.extract_excel_file_path.setText(file_path)
+
+    # ==================== 流程控制高级功能配置 ====================
+
+    def create_else_condition_config(self, parent_layout):
+        """创建Else条件配置 - 官方节点"""
+        else_group = QGroupBox("Else条件设置")
+        else_layout = QFormLayout(else_group)
+
+        info_label = QLabel("Else条件用于与IF条件配对，当IF条件不满足时执行")
+        info_label.setStyleSheet("color: #666; font-size: 13px;")
+        else_layout.addRow(info_label)
+
+        parent_layout.addWidget(else_group)
+
+    def create_breakpoint_config(self, parent_layout):
+        """创建断点调试配置 - 官方节点"""
+        breakpoint_group = QGroupBox("断点调试设置")
+        breakpoint_layout = QFormLayout(breakpoint_group)
+
+        # 断点消息
+        self.breakpoint_message = QLineEdit()
+        self.breakpoint_message.setPlaceholderText("断点提示消息")
+        self.breakpoint_message.setText("调试断点")
+        breakpoint_layout.addRow("断点消息:", self.breakpoint_message)
+
+        # 是否暂停执行
+        self.pause_execution = QCheckBox("暂停执行等待用户确认")
+        self.pause_execution.setChecked(True)
+        breakpoint_layout.addRow("", self.pause_execution)
+
+        parent_layout.addWidget(breakpoint_group)
+
+    def create_switch_profile_config(self, parent_layout):
+        """创建切换环境配置 - 官方节点"""
+        switch_group = QGroupBox("切换环境设置")
+        switch_layout = QFormLayout(switch_group)
+
+        # 环境ID
+        self.switch_profile_id = QLineEdit()
+        self.switch_profile_id.setPlaceholderText("目标环境ID")
+        switch_layout.addRow("环境ID:", self.switch_profile_id)
+
+        # API密钥
+        self.switch_api_key = QLineEdit()
+        self.switch_api_key.setPlaceholderText("AdsPower API密钥")
+        switch_layout.addRow("API密钥:", self.switch_api_key)
+
+        parent_layout.addWidget(switch_group)
+
+    def create_set_thread_delay_config(self, parent_layout):
+        """创建设置线程延迟配置 - 官方节点"""
+        delay_group = QGroupBox("线程延迟设置")
+        delay_layout = QFormLayout(delay_group)
+
+        # 最小延迟
+        self.delay_min = QSpinBox()
+        self.delay_min.setRange(0, 60000)
+        self.delay_min.setValue(1000)
+        self.delay_min.setSuffix(" 毫秒")
+        delay_layout.addRow("最小延迟:", self.delay_min)
+
+        # 最大延迟
+        self.delay_max = QSpinBox()
+        self.delay_max.setRange(0, 60000)
+        self.delay_max.setValue(3000)
+        self.delay_max.setSuffix(" 毫秒")
+        delay_layout.addRow("最大延迟:", self.delay_max)
+
+        parent_layout.addWidget(delay_group)
+
+    def create_throw_error_config(self, parent_layout):
+        """创建抛出错误配置 - 官方节点"""
+        error_group = QGroupBox("抛出错误设置")
+        error_layout = QFormLayout(error_group)
+
+        # 错误消息
+        self.error_message = QLineEdit()
+        self.error_message.setPlaceholderText("错误消息内容")
+        error_layout.addRow("错误消息:", self.error_message)
+
+        # 错误代码
+        self.error_code = QLineEdit()
+        self.error_code.setPlaceholderText("错误代码(可选)")
+        self.error_code.setText("USER_ERROR")
+        error_layout.addRow("错误代码:", self.error_code)
+
+        parent_layout.addWidget(error_group)
+
+    def create_set_process_status_config(self, parent_layout):
+        """创建设置流程状态配置 - 官方节点"""
+        status_group = QGroupBox("流程状态设置")
+        status_layout = QFormLayout(status_group)
+
+        # 状态值
+        self.process_status = QComboBox()
+        self.process_status.addItems(["running", "paused", "completed", "failed", "cancelled"])
+        status_layout.addRow("状态:", self.process_status)
+
+        # 状态消息
+        self.status_message = QLineEdit()
+        self.status_message.setPlaceholderText("状态描述消息")
+        status_layout.addRow("状态消息:", self.status_message)
+
+        parent_layout.addWidget(status_group)
+
+    # ==================== 第三方服务集成配置 ====================
+
+    def create_openai_request_config(self, parent_layout):
+        """创建OpenAI请求配置 - 官方节点"""
+        openai_group = QGroupBox("OpenAI请求设置")
+        openai_layout = QFormLayout(openai_group)
+
+        # API密钥
+        self.openai_api_key = QLineEdit()
+        self.openai_api_key.setPlaceholderText("OpenAI API密钥")
+        self.openai_api_key.setEchoMode(QLineEdit.Password)
+        openai_layout.addRow("API密钥:", self.openai_api_key)
+
+        # 模型选择
+        self.openai_model = QComboBox()
+        self.openai_model.addItems(["gpt-3.5-turbo", "gpt-4", "gpt-4-turbo"])
+        openai_layout.addRow("模型:", self.openai_model)
+
+        # 系统提示
+        self.openai_system_prompt = QTextEdit()
+        self.openai_system_prompt.setPlaceholderText("系统提示词")
+        self.openai_system_prompt.setText("You are a helpful assistant.")
+        self.openai_system_prompt.setMaximumHeight(80)
+        openai_layout.addRow("系统提示:", self.openai_system_prompt)
+
+        # 用户提示
+        self.openai_prompt = QTextEdit()
+        self.openai_prompt.setPlaceholderText("用户提示词，可使用变量如{{variable_name}}")
+        self.openai_prompt.setMaximumHeight(100)
+        openai_layout.addRow("用户提示:", self.openai_prompt)
+
+        # 保存变量
+        self.openai_save_variable = QLineEdit()
+        self.openai_save_variable.setPlaceholderText("保存响应的变量名")
+        self.openai_save_variable.setText("openai_response")
+        openai_layout.addRow("保存到变量:", self.openai_save_variable)
+
+        parent_layout.addWidget(openai_group)
+
+    def create_http_request_config(self, parent_layout):
+        """创建HTTP请求配置 - 官方节点"""
+        http_group = QGroupBox("HTTP请求设置")
+        http_layout = QFormLayout(http_group)
+
+        # 请求URL
+        self.http_url = QLineEdit()
+        self.http_url.setPlaceholderText("请求URL")
+        http_layout.addRow("URL:", self.http_url)
+
+        # 请求方法
+        self.http_method = QComboBox()
+        self.http_method.addItems(["GET", "POST", "PUT", "DELETE"])
+        http_layout.addRow("方法:", self.http_method)
+
+        # 请求头
+        self.http_headers = QTextEdit()
+        self.http_headers.setPlaceholderText('请求头(JSON格式):\n{"Content-Type": "application/json"}')
+        self.http_headers.setMaximumHeight(80)
+        http_layout.addRow("请求头:", self.http_headers)
+
+        # 请求数据
+        self.http_data = QTextEdit()
+        self.http_data.setPlaceholderText("请求数据(JSON格式)")
+        self.http_data.setMaximumHeight(100)
+        http_layout.addRow("请求数据:", self.http_data)
+
+        # 超时时间
+        self.http_timeout = QSpinBox()
+        self.http_timeout.setRange(1, 300)
+        self.http_timeout.setValue(30)
+        self.http_timeout.setSuffix(" 秒")
+        http_layout.addRow("超时时间:", self.http_timeout)
+
+        # 保存变量
+        self.http_save_variable = QLineEdit()
+        self.http_save_variable.setPlaceholderText("保存响应的变量名")
+        self.http_save_variable.setText("http_response")
+        http_layout.addRow("保存到变量:", self.http_save_variable)
+
+        parent_layout.addWidget(http_group)
+
+    def create_google_sheets_config(self, parent_layout):
+        """创建Google表格配置 - 官方节点"""
+        sheets_group = QGroupBox("Google表格设置")
+        sheets_layout = QFormLayout(sheets_group)
+
+        info_label = QLabel("Google表格集成需要配置API凭据")
+        info_label.setStyleSheet("color: #666; font-size: 13px;")
+        sheets_layout.addRow(info_label)
+
+        # 表格ID
+        self.sheets_id = QLineEdit()
+        self.sheets_id.setPlaceholderText("Google表格ID")
+        sheets_layout.addRow("表格ID:", self.sheets_id)
+
+        # 工作表名称
+        self.sheets_name = QLineEdit()
+        self.sheets_name.setPlaceholderText("工作表名称")
+        sheets_layout.addRow("工作表名称:", self.sheets_name)
+
+        parent_layout.addWidget(sheets_group)
+
+    def create_slack_webhook_config(self, parent_layout):
+        """创建Slack通知配置 - 官方节点"""
+        slack_group = QGroupBox("Slack通知设置")
+        slack_layout = QFormLayout(slack_group)
+
+        # Webhook URL
+        self.slack_webhook_url = QLineEdit()
+        self.slack_webhook_url.setPlaceholderText("Slack Webhook URL")
+        slack_layout.addRow("Webhook URL:", self.slack_webhook_url)
+
+        # 消息内容
+        self.slack_message = QTextEdit()
+        self.slack_message.setPlaceholderText("要发送的消息内容")
+        self.slack_message.setMaximumHeight(100)
+        slack_layout.addRow("消息内容:", self.slack_message)
+
+        parent_layout.addWidget(slack_group)
+
+    def create_send_email_config(self, parent_layout):
+        """创建发送邮件配置 - 官方节点"""
+        email_group = QGroupBox("发送邮件设置")
+        email_layout = QFormLayout(email_group)
+
+        # SMTP服务器
+        self.smtp_server = QLineEdit()
+        self.smtp_server.setPlaceholderText("SMTP服务器地址")
+        email_layout.addRow("SMTP服务器:", self.smtp_server)
+
+        # SMTP端口
+        self.smtp_port = QSpinBox()
+        self.smtp_port.setRange(1, 65535)
+        self.smtp_port.setValue(587)
+        email_layout.addRow("SMTP端口:", self.smtp_port)
+
+        # 用户名
+        self.email_username = QLineEdit()
+        self.email_username.setPlaceholderText("邮箱用户名")
+        email_layout.addRow("用户名:", self.email_username)
+
+        # 密码
+        self.email_password = QLineEdit()
+        self.email_password.setPlaceholderText("邮箱密码")
+        self.email_password.setEchoMode(QLineEdit.Password)
+        email_layout.addRow("密码:", self.email_password)
+
+        # 收件人
+        self.email_to = QLineEdit()
+        self.email_to.setPlaceholderText("收件人邮箱")
+        email_layout.addRow("收件人:", self.email_to)
+
+        # 邮件主题
+        self.email_subject = QLineEdit()
+        self.email_subject.setPlaceholderText("邮件主题")
+        email_layout.addRow("主题:", self.email_subject)
+
+        # 邮件内容
+        self.email_body = QTextEdit()
+        self.email_body.setPlaceholderText("邮件内容")
+        self.email_body.setMaximumHeight(100)
+        email_layout.addRow("内容:", self.email_body)
+
+        parent_layout.addWidget(email_group).copy()
 
         # 设置所有可能的配置项到对应的控件
         config_fields = [
